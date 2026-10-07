@@ -1,13 +1,6 @@
 # DQMJ3P Randomizer
 [English](#english) · [Italiano](#italiano)
 
-<p align="center">
-  <img src="img/img.png" alt="DQMJ3P Randomizer icon / Icona del DQMJ3P Randomizer" width="220">
-</p>
-
-
-
-
   <a href="https://github.com/Lurpigi/DQMJ3P-Randomizer/releases/latest">
     <img src="https://img.shields.io/github/v/release/Lurpigi/DQMJ3P-Randomizer?display_name=tag" alt="Latest release / Ultima release">
   </a>
@@ -15,10 +8,11 @@
     <img src="https://img.shields.io/github/downloads/Lurpigi/DQMJ3P-Randomizer/total?label=downloads" alt="Downloads / Download">
   </a>
 
-
-<p align="center" style="margin-top:3rem">
-  <img src="img/app.png" alt="DQMJ3P Randomizer app / Interfaccia del DQMJ3P Randomizer" width="700">
+<p align="center">
+  <img src="img/img.png" alt="DQMJ3P Randomizer icon / Icona del DQMJ3P Randomizer" width="220">
 </p>
+
+
 
 ## English
 
@@ -77,6 +71,10 @@ The randomizer assigns replacements by battle record. Run `python randomize.py -
 ### 💬 Community
 
 Join the [DQMJ3P Discord server](https://discord.com/invite/W5yRJpDd5e).
+
+<p align="center" style="margin-top:3rem">
+  <img src="img/app.png" alt="DQMJ3P Randomizer app / Interfaccia del DQMJ3P Randomizer" width="700">
+</p>
 
 ## Italiano
 
