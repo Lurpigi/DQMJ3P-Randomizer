@@ -33,19 +33,20 @@ You need Python 3.10 or later with Tkinter. From the program folder, run:
 python randomizer_app.py
 ```
 
-The app does not include game files and does not open CIA or 3DS files. Select the already extracted RomFS folders for the base game and update 1.3. The app combines them while it runs, with update files taking precedence. Keep the app folder together when you move it.
-
 Choose **IT** or **EN** in the top-right corner to switch the app language.
+
+The app does not include game files and does not open CIA or 3DS files. It needs the already extracted RomFS folders for the base game and update 1.3. The app combines them while it runs, with update files taking precedence. Keep the app folder together when you move it.
 
 ### 🎲 Make a package
 
-1. Enter a seed. Use `0` to get a random one.
-2. Choose the families and ranks allowed for replacements. The filters apply together and do not change which original monsters are randomized.
-3. Open **Advanced options**. Hover over **ⓘ** for details.
-4. Optional: select **Use event and boss species as replacements**.
-5. Optional: select **Also change records outside wild encounters (experimental)**.
-6. Select the base game RomFS folder and the update 1.3 RomFS folder.
-7. Create the package. Find the folder and ZIP in `output/`.
+1. Select the base game RomFS folder and the update 1.3 RomFS folder. If you still need to extract them, follow [the RomFS extraction guide](docs/INSTALL.md#extract-the-romfs-folders).
+2. Choose the families allowed for replacements. This filter limits the replacement pool; it does not change which original monsters are randomized.
+3. Choose the allowed ranks. If you use both filters, a replacement must match both.
+4. Enter a seed. Use `0` to get a random one.
+5. Open **Advanced options** if needed. Hover over **ⓘ** for details.
+6. Optional: select **Use event and boss species as replacements**.
+7. Optional: select **Also change records outside wild encounters (experimental)**.
+8. Click **Create package**. Find the folder and ZIP in `output/`.
 
 The same seed and options always assign the same replacement to each battle record. Encounters of the same species can differ if they use different records. Encounters that share a record keep the same replacement.
 
@@ -88,19 +89,20 @@ Serve Python 3.10 o versioni successive con Tkinter. Dalla cartella del programm
 python randomizer_app.py
 ```
 
-L'app non include file di gioco e non apre file CIA o 3DS. Seleziona le cartelle RomFS già estratte del gioco base e dell'aggiornamento 1.3. L'app le combina mentre è in esecuzione e dà precedenza ai file dell'update. Quando sposti l'app, conserva tutta la cartella.
-
 Scegli **IT** o **EN** in alto a destra per cambiare la lingua dell'app.
+
+L'app non include file di gioco e non apre file CIA o 3DS. Richiede le cartelle RomFS già estratte del gioco base e dell'aggiornamento 1.3. Le combina mentre è in esecuzione e dà precedenza ai file dell'update. Quando sposti l'app, conserva tutta la cartella.
 
 ### 🎲 Crea un pacchetto
 
-1. Inserisci un seed. Usa `0` per generarne uno casuale.
-2. Scegli le famiglie e i gradi ammessi per i sostituti. I filtri si applicano insieme e non cambiano quali mostri originali vengono randomizzati.
-3. Apri **Opzioni avanzate**. Passa il puntatore su **ⓘ** per i dettagli.
-4. Facoltativo: seleziona **Usa specie di eventi e boss come sostituti**.
-5. Facoltativo: seleziona **Modifica anche i record fuori dagli incontri selvatici (sperimentale)**.
-6. Seleziona la cartella RomFS del gioco base e quella dell'aggiornamento 1.3.
-7. Crea il pacchetto. Trovi la cartella e il file ZIP in `output/`.
+1. Seleziona la cartella RomFS del gioco base e quella dell'aggiornamento 1.3. Se devi ancora estrarle, segui la [guida per estrarre il RomFS](docs/INSTALL.md#estrai-le-cartelle-romfs).
+2. Scegli le famiglie ammesse per i sostituti. Il filtro limita il pool dei sostituti, ma non cambia quali mostri originali vengono randomizzati.
+3. Scegli i gradi ammessi. Se usi entrambi i filtri, ogni sostituto deve rispettarli entrambi.
+4. Inserisci un seed. Usa `0` per generarne uno casuale.
+5. Apri **Opzioni avanzate** se ti servono. Passa il puntatore su **ⓘ** per i dettagli.
+6. Facoltativo: seleziona **Usa specie di eventi e boss come sostituti**.
+7. Facoltativo: seleziona **Modifica anche i record fuori dagli incontri selvatici (sperimentale)**.
+8. Premi **Crea pacchetto**. Trovi la cartella e il file ZIP in `output/`.
 
 Lo stesso seed e le stesse opzioni assegnano sempre lo stesso sostituto a ogni record di battaglia. Incontri della stessa specie possono essere diversi se usano record diversi. Gli incontri che condividono un record mantengono lo stesso sostituto.
 
@@ -126,4 +128,3 @@ Il randomizer assegna i sostituti in base al record di battaglia. Esegui `python
 ### 💬 Comunità
 
 Entra nel [server Discord di DQMJ3P](https://discord.com/invite/W5yRJpDd5e).
-
