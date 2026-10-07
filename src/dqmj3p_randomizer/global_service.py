@@ -315,10 +315,9 @@ def build_global_overlay(
             ),
         }
         (stage / "config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        docs_root = project / "docs"
-        source_doc = docs_root / "INSTALL.md"
-        if source_doc.is_file():
-            shutil.copyfile(source_doc, stage / "INSTALL.md")
+        source_readme = project / "README.md"
+        if source_readme.is_file():
+            shutil.copyfile(source_readme, stage / "README.md")
 
         fd, temp_name = tempfile.mkstemp(prefix=f".{output_name}.", suffix=".zip.tmp", dir=output_root)
         os.close(fd)

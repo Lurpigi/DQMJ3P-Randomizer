@@ -53,7 +53,6 @@ def _files_to_package() -> list[tuple[Path, str]]:
 
     docs_root = PROGRAM_ROOT / "docs"
     doc_names = (
-        "INSTALL.md",
         "FORMAT.md",
     )
     for name in doc_names:
