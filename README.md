@@ -1,18 +1,23 @@
 # DQMJ3P Randomizer
-
 [English](#english) · [Italiano](#italiano)
 
 <p align="center">
+  <img src="img/img.png" alt="DQMJ3P Randomizer icon / Icona del DQMJ3P Randomizer" width="220">
+</p>
+
+
+
+
   <a href="https://github.com/Lurpigi/DQMJ3P-Randomizer/releases/latest">
     <img src="https://img.shields.io/github/v/release/Lurpigi/DQMJ3P-Randomizer?display_name=tag" alt="Latest release / Ultima release">
   </a>
   <a href="https://github.com/Lurpigi/DQMJ3P-Randomizer/releases/latest/download/dqmj3p_randomizer_portable.zip">
     <img src="https://img.shields.io/github/downloads/Lurpigi/DQMJ3P-Randomizer/total?label=downloads" alt="Downloads / Download">
   </a>
-</p>
 
-<p align="center">
-  <img src="img/img.png" alt="DQMJ3P Randomizer icon / Icona del DQMJ3P Randomizer" width="220">
+
+<p align="center" style="margin-top:3rem">
+  <img src="img/app.png" alt="DQMJ3P Randomizer app / Interfaccia del DQMJ3P Randomizer" width="700">
 </p>
 
 ## English
