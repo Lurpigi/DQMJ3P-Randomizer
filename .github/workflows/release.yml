@@ -24,6 +24,9 @@ jobs:
       - name: Build portable ZIP
         run: python package_program.py
 
+      - name: Generate SHA-256 checksum
+        run: sha256sum output/dqmj3p_randomizer_portable.zip > output/dqmj3p_randomizer_portable.zip.sha256
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -31,6 +34,7 @@ jobs:
           release_args=(
             "${GITHUB_REF_NAME}"
             output/dqmj3p_randomizer_portable.zip
+            output/dqmj3p_randomizer_portable.zip.sha256
             --verify-tag
             --title "${GITHUB_REF_NAME}"
             --generate-notes
