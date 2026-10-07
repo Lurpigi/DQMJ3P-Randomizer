@@ -28,7 +28,7 @@ class GlobalOptions:
 
     def __post_init__(self) -> None:
         if isinstance(self.seed, bool) or not isinstance(self.seed, int) or not 0 <= self.seed < 2**64:
-            raise GlobalRandomizerError("Il seed deve essere un intero unsigned a 64 bit")
+            raise GlobalRandomizerError("Il seed deve essere un numero intero senza segno a 64 bit")
         for name in ("include_special_donors", "include_nonwild_instances", "avoid_fixed_points"):
             if not isinstance(getattr(self, name), bool):
                 raise GlobalRandomizerError(f"{name} deve essere booleano")
@@ -133,7 +133,7 @@ def plan_encounter_randomization(
     }
     if not donor_ids:
         raise GlobalRandomizerError(
-            "Nessun sostituto ha taglia, record MONP e modello compatibili con i filtri selezionati"
+            "Nessun sostituto soddisfa i filtri e ha taglia, record MONP e modello compatibili"
         )
 
     donors_by_size: dict[int, list[int]] = {}
@@ -168,7 +168,7 @@ def plan_encounter_randomization(
     for instance_id in sorted(selected_ids):
         row = instances.get(instance_id)
         if row is None:
-            raise GlobalRandomizerError(f"MONP instance ID non trovato: {instance_id}")
+            raise GlobalRandomizerError(f"ID di istanza MONP non trovato: {instance_id}")
         source_kind = row["kind_id"]
         if source_kind == 0:
             instance_mapping[instance_id] = 0
@@ -265,7 +265,7 @@ def _patch_u16(data: bytearray, offset: int, value: int, allowed_offsets: set[in
     if offset < 0 or offset + 2 > len(data):
         raise GlobalRandomizerError("Tentativo di patch fuori dai limiti del file")
     if value < 0 or value > 0xFFFF:
-        raise GlobalRandomizerError("kind ID oltre il range u16")
+        raise GlobalRandomizerError("ID della specie fuori dall'intervallo consentito (0-65535)")
     if offset not in allowed_offsets:
         raise GlobalRandomizerError("Tentativo di patch fuori dai campi autorizzati")
     struct.pack_into("<H", data, offset, value)
@@ -303,7 +303,7 @@ def patch_monsterparam(
     selected = set(parsed["instances"]) if include_nonwild_instances else set(selected_instance_ids)
     unknown = selected - set(parsed["instances"])
     if unknown:
-        raise GlobalRandomizerError(f"ID MONP selezionati non presenti: {sorted(unknown)[:8]}")
+        raise GlobalRandomizerError(f"ID MONP selezionati non trovati: {sorted(unknown)[:8]}")
     output = bytearray(data)
     allowed: set[int] = set()
     patched_ids: list[int] = []

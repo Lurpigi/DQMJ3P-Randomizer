@@ -52,23 +52,23 @@ def _safe_output(project_root: Path, output_dir: Path, name: str) -> tuple[Path,
     project = project_root.resolve(strict=True)
     output_root = project / "output"
     if output_root.resolve(strict=False) != output_root:
-        raise GlobalBuildError("randomizer/output deve essere una cartella reale, senza symlink")
+        raise GlobalBuildError("La cartella di output deve essere reale, non un collegamento simbolico")
     if not _VALID_NAME.fullmatch(name) or name.endswith((".", " ")):
-        raise GlobalBuildError("Nome output non valido")
+        raise GlobalBuildError("Nome della cartella non valido")
     supplied = output_dir.expanduser()
     if not supplied.is_absolute():
         supplied = project / supplied
     resolved = supplied.resolve(strict=False)
     if resolved != output_root:
-        raise GlobalBuildError(f"La cartella contenitore deve essere {output_root}")
+        raise GlobalBuildError(f"La cartella di output deve essere {output_root}")
     if supplied.exists() and supplied.resolve(strict=True) != resolved:
-        raise GlobalBuildError("Il percorso output contiene un symlink non ammesso")
+        raise GlobalBuildError("Il percorso di output contiene un collegamento simbolico non consentito")
     destination = resolved / name
     if not _within(destination, output_root) or destination.exists():
-        raise GlobalBuildError(f"Destinazione già esistente o fuori dal progetto: {destination}")
+        raise GlobalBuildError(f"La cartella di destinazione esiste già o si trova fuori dal progetto: {destination}")
     zip_path = destination.with_name(destination.name + ".zip")
     if zip_path.exists():
-        raise GlobalBuildError(f"Archivio già esistente: {zip_path}")
+        raise GlobalBuildError(f"Il file ZIP esiste già: {zip_path}")
     return output_root, destination
 
 
@@ -96,21 +96,21 @@ def build_global_overlay(
     try:
         dataset = RomFsSource(base_romfs_root, update_romfs_root)
     except (RomFsSourceError, OSError) as exc:
-        raise GlobalBuildError(f"Cartelle RomFS non disponibili o incomplete: {exc}") from exc
+        raise GlobalBuildError(f"Le cartelle RomFS non sono disponibili o sono incomplete: {exc}") from exc
     resolved_output_root = output_root.resolve(strict=False)
     if any(
         _within(resolved_output_root, source_root)
         or _within(source_root, resolved_output_root)
         for source_root in (dataset.base_root, dataset.update_root)
     ):
-        raise GlobalBuildError("La cartella output e i RomFS devono restare separati")
+        raise GlobalBuildError("La cartella di output deve essere separata dalle cartelle RomFS")
 
     try:
         kindparam = dataset.read(KINDPARAM_PATH)
         monsterparam = dataset.read(MONP_PATH)
         kindconfig = dataset.read(KINDCONFIG_PATH)
     except RomFsSourceError as exc:
-        raise GlobalBuildError(f"Manca una tabella Parameter necessaria: {exc}") from exc
+        raise GlobalBuildError(f"Manca una tabella Parameter richiesta: {exc}") from exc
     model_paths = dataset.model_paths
     catalog = merge_global_catalog(kindparam, monsterparam, kindconfig, model_paths)
     inventory = scan_global_encounters(dataset)
@@ -156,7 +156,7 @@ def build_global_overlay(
             file_audits.append(audit)
 
     if not modified_files:
-        raise GlobalBuildError("Il seed e i filtri non hanno prodotto alcuna modifica")
+        raise GlobalBuildError("Con questo seed e questi filtri non è stata generata alcuna modifica")
 
     species = {row["kind_id"]: row for row in catalog["species"]}
     instance_rows = [
@@ -257,10 +257,10 @@ def build_global_overlay(
             "monp_ids_reuse_seeded_mapping": True,
         },
         "limitations": [
-            "Il pacchetto legge solo i file necessari dal RomFS estratto scelto dall'utente e non modifica i file sorgente.",
-            "I quattro valori PTYT sono riportati come candidati numerici che coincidono con ID MONP; la semantica di ogni parola non è confermata.",
-            "La modalità eventi include i record MONP fuori dall'ambito SMOT; non identifica singolarmente boss, eventi o contenuti storia.",
-            "Le specie con taglia non conosciuta o senza donatore dello stesso numero di slot restano invariate.",
+            "Il pacchetto legge solo i file necessari dal RomFS scelto dall'utente e non modifica i file originali.",
+            "I quattro valori PTYT sono segnalati perché coincidono numericamente con ID MONP; il loro significato non è confermato.",
+            "La modalità eventi include i record MONP fuori dagli incontri SMOT, ma non distingue i record di boss, eventi o contenuti della storia.",
+            "Le specie senza una taglia nota o senza un sostituto con lo stesso numero di slot restano invariate.",
         ],
     }
     spoiler = [f"Seed: {seed}", "", "Sostituzioni per record MONP:"]
@@ -281,7 +281,7 @@ def build_global_overlay(
         f"Record SMOT analizzati: {inventory['record_count']}",
         f"Record MONP modificati: {len(changed_instance_ids)}",
         f"Parole PTYT candidate coincidenti con ID MONP modificati: {party_impact['candidate_party_words_matching_changed_monp_instance_ids']}",
-        "La tabella PTYT e censita per sovrapposizione numerica; questo non conferma da solo il significato in gioco.",
+        "La tabella PTYT è stata analizzata in base alle corrispondenze numeriche; questo non ne conferma il significato in gioco.",
     ])
 
     stage: Path | None = None

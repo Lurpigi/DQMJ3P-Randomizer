@@ -120,17 +120,17 @@ Join the [DQMJ3P Discord server](https://discord.com/invite/W5yRJpDd5e).
 
 ## Italiano
 
-Un piccolo randomizer per *Dragon Quest Monsters: Joker 3 Professional*. Scegli un seed per sostituire i mostri degli incontri mantenendone la taglia. Usa lo stesso seed e le stesse opzioni per ottenere di nuovo gli stessi risultati.
+Un semplice randomizer per *Dragon Quest Monsters: Joker 3 Professional*. Scegli un seed per cambiare i mostri che incontri senza modificarne la taglia. Con lo stesso seed e le stesse opzioni ottieni sempre gli stessi risultati.
 
-### Ottieni le cartelle RomFS
+### Estrai le cartelle RomFS
 
-Servono un file `.cia` o `.3ds` del gioco base e un altro dell'aggiornamento 1.3.
+Ti servono un file `.cia` o `.3ds` del gioco base e uno dell'aggiornamento 1.3.
 
-1. Scarica [HackingToolkit3DS v9](https://github.com/Asia81/HackingToolkit9DS/releases/tag/9) ed estrai l'archivio.
-2. Metti il file del gioco base nella cartella di HackingToolkit e avvia l'estrazione per il suo formato (`.cia` o `.3ds`). Quando ti chiede se decomprimere `code.bin`, scegli **No**.
-3. Rinomina o sposta la cartella `ExtractedRomFS` ottenuta in `romfs-base`.
-4. Ripeti i passaggi 2 e 3 per l'aggiornamento 1.3. Rinomina o sposta la sua cartella `ExtractedRomFS` in `romfs-update`.
-5. Controlla che entrambe le cartelle contengano `data/` al loro interno:
+1. Scarica [HackingToolkit3DS v9](https://github.com/Asia81/HackingToolkit9DS/releases/tag/9) e decomprimi l'archivio.
+2. Copia il file del gioco base nella cartella di HackingToolkit e avvia l'estrazione per il suo formato (`.cia` o `.3ds`). Se ti chiede di decomprimere `code.bin`, scegli **No**.
+3. Rinomina la cartella `ExtractedRomFS` in `romfs-base`.
+4. Estrai l'aggiornamento 1.3 allo stesso modo e rinomina la cartella `ExtractedRomFS` ottenuta in `romfs-update`.
+5. Controlla che `data/` si trovi al livello principale di entrambe le cartelle:
 
    ```text
    romfs-base/data/
@@ -141,7 +141,7 @@ Nell'app, seleziona `romfs-base` e `romfs-update`, non le sottocartelle `data/`.
 
 ### 🚀 Avvio
 
-Serve Python 3.10 o versioni successive con Tkinter. Dalla cartella del programma, esegui:
+Serve Python 3.10 o una versione successiva con Tkinter. Dalla cartella del programma, esegui:
 
 ```powershell
 python randomizer_app.py
@@ -149,51 +149,51 @@ python randomizer_app.py
 
 Scegli **IT** o **EN** in alto a destra per cambiare la lingua dell'app.
 
-L'app non include file di gioco e non apre file CIA o 3DS. Richiede le cartelle RomFS già estratte del gioco base e dell'aggiornamento 1.3. Le combina mentre è in esecuzione e dà precedenza ai file dell'update. Quando sposti l'app, conserva tutta la cartella.
+Il programma non include file di gioco né apre file CIA o 3DS. Per funzionare, richiede le cartelle RomFS già estratte del gioco base e dell'aggiornamento 1.3. Le carica in memoria e usa i file dell'aggiornamento quando lo stesso percorso è presente in entrambe. Se sposti il programma, sposta tutta la sua cartella.
 
 ### 🎲 Crea un pacchetto
 
-1. Seleziona la cartella RomFS del gioco base e quella dell'aggiornamento 1.3. Se devi ancora estrarle, segui [Ottieni le cartelle RomFS](#ottieni-le-cartelle-romfs).
-2. Scegli le famiglie ammesse per i sostituti. Il filtro limita il pool dei sostituti, ma non cambia quali mostri originali vengono randomizzati.
+1. Seleziona la cartella RomFS del gioco base e quella dell'aggiornamento 1.3. Se devi ancora estrarle, segui [Estrai le cartelle RomFS](#estrai-le-cartelle-romfs).
+2. Scegli le famiglie ammesse per i sostituti. Il filtro decide quali mostri possono diventare sostituti, non quali incontri vengono randomizzati.
 3. Scegli i gradi ammessi. Se usi entrambi i filtri, ogni sostituto deve rispettarli entrambi.
 4. Inserisci un seed. Usa `0` per generarne uno casuale.
-5. Apri **Opzioni avanzate** se ti servono. Passa il puntatore su **ⓘ** per i dettagli.
-6. Facoltativo: seleziona **Usa specie di eventi e boss come sostituti**.
+5. Apri **Opzioni avanzate** se ti servono. Per i dettagli, passa il puntatore su **ⓘ**.
+6. Facoltativo: seleziona **Usa anche mostri degli eventi e dei boss come sostituti**.
 7. Facoltativo: seleziona **Modifica anche i record fuori dagli incontri selvatici (sperimentale)**.
-8. Premi **Crea pacchetto**. Trovi la cartella e il file ZIP in `output/`.
+8. Premi **Crea pacchetto**. Trovi i file in `output/`.
 
-Lo stesso seed e le stesse opzioni assegnano sempre lo stesso sostituto a ogni record di battaglia. Incontri della stessa specie possono essere diversi se usano record diversi. Gli incontri che condividono un record mantengono lo stesso sostituto.
+Con lo stesso seed e le stesse opzioni, ogni record di battaglia riceve sempre lo stesso sostituto. Incontri della stessa specie possono ricevere sostituti diversi se usano record diversi. Se più incontri condividono un record, ricevono lo stesso sostituto.
 
-Il pacchetto contiene i file modificati, un manifest, uno spoiler, una configurazione e questo README con le istruzioni d'installazione. Prima di crearlo, l'app controlla entrambe le cartelle selezionate. Il download dell'app non contiene file di gioco.
+Il pacchetto include i file modificati, un manifest, il riepilogo delle sostituzioni, un file di configurazione e questo README con le istruzioni per l'installazione. Prima di crearlo, l'app controlla entrambe le cartelle selezionate. Il download del programma non include file di gioco.
 
 ### Installa la mod
 
 **3DS con Luma3DS**
 
-1. Spegni il 3DS. Tieni premuto **SELECT** mentre lo accendi, attiva **Enable game patching** e premi **START** per salvare.
+1. Spegni il 3DS. Tieni premuto **SELECT** mentre lo accendi, attiva **Enable game patching** e premi **START** per salvare le impostazioni.
 2. Sulla scheda SD, crea `/luma/titles/00040000001ACB00/romfs/`.
-3. Copia in questa cartella il contenuto di `romfs/` dello ZIP del randomizer. Sostituisci i file omonimi.
+3. Copia in questa cartella i file contenuti in `romfs/` nello ZIP del randomizer. Sostituisci i file con lo stesso nome.
 4. Reinserisci la scheda SD nel 3DS e avvia il gioco.
 
 **Azahar su PC o Android**
 
-Installa prima in Azahar il gioco e l'aggiornamento 1.3.
+In Azahar, installa il gioco e l'aggiornamento 1.3.
 
-PC:
+**PC**
 
-1. Nell'elenco dei giochi di Azahar, fai clic destro sul gioco e scegli **Open Mods Location**.
+1. Nell'elenco dei giochi di Azahar, fai clic con il tasto destro sul gioco e scegli **Open Mods Location**.
 2. Se non esiste, crea la cartella `romfs/` nella cartella della mod.
-3. Copia al suo interno il contenuto di `romfs/` dello ZIP del randomizer. Sostituisci i file omonimi.
+3. Copia lì i file contenuti in `romfs/` nello ZIP del randomizer. Sostituisci i file con lo stesso nome.
 
-Android:
+**Android**
 
 1. Apri la cartella dei dati di Azahar con un gestore file.
 2. Crea `load/mods/00040000001ACB00/romfs/`.
-3. Copia in questa cartella il contenuto di `romfs/` dello ZIP del randomizer.
+3. Copia in questa cartella i file contenuti in `romfs/` nello ZIP del randomizer.
 
 ### Controlla o rimuovi la mod
 
-Avvia il gioco e rientra in una zona per aggiornare gli incontri. Per rimuovere il randomizer, elimina i file elencati nel manifest del pacchetto.
+Avvia il gioco ed entra in una nuova area per caricare gli incontri modificati. Per rimuovere la mod, elimina i file elencati nel manifest del pacchetto.
 
 
 ### ⌨️ Usa la riga di comando
@@ -205,7 +205,7 @@ python randomize.py --base-romfs "C:\percorso\romfs-base" --update-romfs "C:\per
 python randomize.py --base-romfs "C:\percorso\romfs-base" --update-romfs "C:\percorso\romfs-update" --seed 42 --family slime --rank f --rank ss
 ```
 
-Il randomizer assegna i sostituti in base al record di battaglia. Esegui `python randomize.py --help` per vedere tutte le opzioni. Per l'installazione, consulta [Installa la mod](#installa-la-mod). Per i dettagli tecnici, consulta [FORMAT.md](https://github.com/Lurpigi/DQMJ3P-Randomizer/blob/main/docs/FORMAT.md#italiano).
+Il randomizer assegna i sostituti in base al record di battaglia. Esegui `python randomize.py --help` per vedere tutte le opzioni. Per installare la mod, consulta [Installa la mod](#installa-la-mod). Per i dettagli tecnici, consulta [FORMAT.md](https://github.com/Lurpigi/DQMJ3P-Randomizer/blob/main/docs/FORMAT.md#italiano).
 
 ### 📚 Guide
 

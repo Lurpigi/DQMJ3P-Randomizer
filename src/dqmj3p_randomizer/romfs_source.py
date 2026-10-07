@@ -28,11 +28,11 @@ class RomFsSource:
         self.base_root = Path(base_root).expanduser().resolve(strict=True)
         self.update_root = Path(update_root).expanduser().resolve(strict=True)
         if not self.base_root.is_dir() or not self.update_root.is_dir():
-            raise RomFsSourceError("Entrambe le selezioni devono essere cartelle RomFS")
+            raise RomFsSourceError("Entrambe le selezioni devono indicare cartelle RomFS")
         if self._within(self.base_root, self.update_root) or self._within(
             self.update_root, self.base_root
         ):
-            raise RomFsSourceError("Le cartelle RomFS base e update devono essere separate")
+            raise RomFsSourceError("Le cartelle RomFS del gioco base e dell'aggiornamento devono essere separate")
 
         self._base = self._index(self.base_root)
         self._update = self._index(self.update_root)
@@ -69,11 +69,11 @@ class RomFsSource:
             current_path = Path(current)
             for dirname in dirs:
                 if (current_path / dirname).is_symlink():
-                    raise RomFsSourceError("Le cartelle RomFS non possono contenere symlink")
+                    raise RomFsSourceError("Le cartelle RomFS non possono contenere collegamenti simbolici")
             for filename in files:
                 path = current_path / filename
                 if path.is_symlink():
-                    raise RomFsSourceError("I file RomFS non possono essere symlink")
+                    raise RomFsSourceError("I file RomFS non possono essere collegamenti simbolici")
                 relative = path.relative_to(root).as_posix()
                 key = relative.casefold()
                 if key in found:

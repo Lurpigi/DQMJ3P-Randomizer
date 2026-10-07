@@ -14,21 +14,21 @@ from .global_service import GlobalBuildError, build_global_overlay
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="dqmj3p-randomizer",
-        description="Crea un randomizer da cartelle RomFS base e update già estratte.",
+        description="Crea un pacchetto usando le cartelle RomFS già estratte del gioco base e dell'aggiornamento 1.3.",
     )
-    parser.add_argument("--seed", required=True, type=int, help="Seed riproducibile unsigned a 64 bit")
-    parser.add_argument("--base-romfs", required=True, type=Path, help="Cartella RomFS già estratta del gioco base")
-    parser.add_argument("--update-romfs", required=True, type=Path, help="Cartella RomFS già estratta dell'update 1.3")
-    parser.add_argument("--output-name", help="Nome nuova cartella dentro randomizer/output")
-    parser.add_argument("--include-special-donors", action="store_true", help="Aggiunge alla pool donatori le specie speciali supportate")
-    parser.add_argument("--include-nonwild-instances", action="store_true", help="Estende le modifiche a tutte le istanze MONP, incluse quelle fuori dalle definizioni SMOT")
+    parser.add_argument("--seed", required=True, type=int, help="Numero intero da 0 a 2^64-1; con 0 viene generato un seed casuale")
+    parser.add_argument("--base-romfs", required=True, type=Path, help="Cartella RomFS estratta del gioco base")
+    parser.add_argument("--update-romfs", required=True, type=Path, help="Cartella RomFS estratta dell'aggiornamento 1.3")
+    parser.add_argument("--output-name", help="Nome della cartella da creare in randomizer/output")
+    parser.add_argument("--include-special-donors", action="store_true", help="Aggiunge ai possibili sostituti i mostri compatibili degli eventi e dei boss")
+    parser.add_argument("--include-nonwild-instances", action="store_true", help="Estende le modifiche ai record MONP fuori dagli incontri selvatici")
     parser.add_argument(
         "--family", action="append", choices=sorted(FAMILY_NAME_TO_CODE), metavar="FAMILY",
-        help="Limita il pool dei sostituti a questa famiglia; ripeti l'opzione per più famiglie.",
+        help="Limita i possibili sostituti a questa famiglia; ripeti l'opzione per aggiungerne altre.",
     )
     parser.add_argument(
         "--rank", action="append", choices=sorted(RANK_NAME_TO_CODE), metavar="RANK",
-        help="Limita il pool dei sostituti a questo grado (f/e/d/c/b/a/s/ss); ripeti l'opzione.",
+        help="Limita i possibili sostituti a questo grado (f/e/d/c/b/a/s/ss); puoi ripetere l'opzione.",
     )
     return parser
 
@@ -59,7 +59,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"ZIP: {result['zip_path']}")
         manifest = result["manifest"]
         count = manifest["scope"]["changed_monp_instance_count"]
-        print(f"Record randomizzati: {count}; file modificati: {len(manifest['modified_files'])}")
+        print(f"Record MONP modificati: {count}; file modificati: {len(manifest['modified_files'])}")
         return 0
     except (GlobalBuildError, OSError, ValueError) as exc:
         print(f"Errore: {exc}", file=sys.stderr)

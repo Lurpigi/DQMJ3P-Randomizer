@@ -136,7 +136,7 @@ def validate_paths(romfs: Path, output: Path, project_root: Path) -> tuple[Path,
     expected_output_root = project / "output"
     output_root = expected_output_root.resolve()
     if output_root != expected_output_root:
-        raise InspectionError(f"La cartella output deve essere una cartella reale: {expected_output_root}")
+        raise InspectionError(f"La cartella di output non può essere un collegamento simbolico: {expected_output_root}")
     candidate = output.expanduser()
     if not candidate.is_absolute():
         candidate = project / candidate
@@ -153,9 +153,9 @@ def validate_paths(romfs: Path, output: Path, project_root: Path) -> tuple[Path,
             f"Il report deve essere scritto dentro {output_root}; richiesto: {destination}"
         )
     if _is_within(destination, source) or destination == source:
-        raise InspectionError("Il report non può sovrascrivere o trovarsi dentro il RomFS sorgente")
+        raise InspectionError("Il report non può sovrascrivere file nel RomFS sorgente né essere salvato al suo interno")
     if destination.exists() and destination.is_dir():
-        raise InspectionError(f"Il percorso output indica una cartella, serve un file JSON: {destination}")
+        raise InspectionError(f"Il percorso del report indica una cartella; serve il percorso di un file JSON: {destination}")
     if destination.suffix.lower() != ".json":
         raise InspectionError("Il report deve avere estensione .json")
     return source, destination
@@ -289,7 +289,7 @@ def write_report(report: dict[str, Any], destination: Path) -> None:
             stream.write("\n")
         os.replace(temp_path, destination)
     except FileExistsError as exc:
-        raise InspectionError(f"File temporaneo report già presente: {temp_path}") from exc
+        raise InspectionError(f"Il file temporaneo del report esiste già: {temp_path}") from exc
     except Exception:
         try:
             temp_path.unlink(missing_ok=True)

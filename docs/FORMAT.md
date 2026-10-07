@@ -54,26 +54,26 @@ The special-donor option adds compatible event and boss species to the replaceme
 
 ## Italiano
 
-### 📁 RomFS sorgente
+### 📁 Cartelle RomFS
 
-L'app non include file di gioco. Seleziona due cartelle già estratte: il RomFS del gioco base e quello dell'aggiornamento 1.3. Alla radice di entrambe deve esserci `data/`. L'app combina le cartelle in memoria e, se trova lo stesso percorso in entrambe, usa il file dell'update. Controlla le tabelle dei parametri, gli archivi degli incontri e i nomi dei modelli `.bch`, poi calcola un'impronta SHA-256. Legge i file senza modificarli. Non apre né estrae file `.3ds` o `.cia`.
+L'app non include file di gioco. Seleziona le cartelle RomFS già estratte del gioco base e dell'aggiornamento 1.3. Alla radice di entrambe deve esserci `data/`. L'app le combina in memoria e, se lo stesso percorso è presente in entrambe, usa il file dell'aggiornamento. Controlla le tabelle dei parametri, gli archivi degli incontri e i nomi dei modelli `.bch`, poi calcola un'impronta SHA-256. Legge i file senza modificarli. Non apre né estrae file `.3ds` o `.cia`.
 
 ### 🔧 Campi modificati
 
-| Tabella | Struttura dei record | Campo specie |
+| Tabella | Struttura dei record | Campo della specie |
 |---|---|---|
-| `MonsterParam.tp` / MONP | Header di 4 byte, record di 72 byte | Valore a 16 bit little-endian a +2; ID record a +0 |
-| SMOT negli archivi ET / XBB | Header di 4 byte, record di 116 byte | Valore a 16 bit little-endian a +4; riferimenti MONP a +2, +6 e +8 |
+| `MonsterParam.tp` / MONP | Intestazione di 4 byte, record di 72 byte | Valore little-endian a 16 bit all'offset +2; ID del record all'offset +0 |
+| SMOT negli archivi ET / XBB | Intestazione di 4 byte, record di 116 byte | Valore little-endian a 16 bit all'offset +4; riferimenti MONP agli offset +2, +6 e +8 |
 
-Il randomizer modifica solo i campi specie indicati. Lunghezze, ID, riferimenti e tutti gli altri byte restano invariati, inclusi ENCT, MGRT e FADT. L'app non aggiunge record MONP e non riscrive posizioni o script.
+Il randomizer modifica solo i campi della specie indicati. Non cambia la lunghezza dei file, gli ID, i riferimenti o gli altri byte. I dati ENCT, MGRT e FADT restano invariati. L'app non aggiunge record MONP e non riscrive posizioni o script.
 
 ### 🏅 Grado dei mostri
 
-`KindParam.tp` / KINP contiene il codice del grado a +34. I codici da 1 a 8 corrispondono a F, E, D, C, B, A, S e SS. Il codice della famiglia si trova a +35.
+`KindParam.tp` / KINP memorizza il codice del grado all'offset +34. I codici da 1 a 8 corrispondono a F, E, D, C, B, A, S e SS. Il codice della famiglia si trova all'offset +35.
 
 ### 📏 Taglia dei mostri
 
-`KindParam.tp` / KINP contiene record da 120 byte. Il codice a 16 bit a +48 corrisponde agli slot in battaglia:
+`KindParam.tp` / KINP è organizzata in record da 120 byte. Il codice a 16 bit all'offset +48 indica il numero di slot in battaglia:
 
 | Codice | Slot |
 |---|---:|
@@ -82,22 +82,22 @@ Il randomizer modifica solo i campi specie indicati. Lunghezze, ID, riferimenti 
 | 3 | 3 |
 | 4 | 4 |
 
-Gli altri codici sono sconosciuti. La mappatura corrisponde ai tratti Small, Normal, Mega, Giga e Ultra Body e alle [taglie del gioco](https://dragon-quest.jp/dqmj3/system/size.php). I codici 0 e 1 indicano entrambi la taglia S, ma rappresentano tipi di corpo diversi.
+Gli altri codici non sono riconosciuti. La mappatura corrisponde ai tratti Small, Normal, Mega, Giga e Ultra Body e alle [taglie del gioco](https://dragon-quest.jp/dqmj3/system/size.php). I codici 0 e 1 indicano entrambi la taglia S, ma rappresentano tipi di corpo diversi.
 
-Un sostituto deve avere taglia nota, un record MONP e un modello presente nel gioco. Con entrambe le opzioni avanzate disattivate, i sostituti provengono dagli incontri selvatici e dai relativi riferimenti di battaglia.
+Un sostituto deve avere una taglia nota, un record MONP e un modello presente nel gioco. Se entrambe le opzioni avanzate sono disattivate, i sostituti vengono scelti tra i mostri degli incontri selvatici e i relativi riferimenti di battaglia.
 
-### 🧩 Come si collegano i record
+### 🧩 Collegamento tra i record
 
-Il randomizer assegna i sostituti in base all'ID MONP, non alla specie. Ogni uso dello stesso ID riceve lo stesso sostituto. Record diversi della stessa specie possono riceverne di diversi. Il seed rende la mappatura riproducibile.
+Il randomizer assegna i sostituti in base all'ID MONP, non alla specie. Tutti gli incontri che usano lo stesso ID ricevono lo stesso sostituto. Record diversi della stessa specie possono invece ricevere sostituti diversi. Il seed permette di ottenere la stessa mappatura a ogni esecuzione.
 
-I filtri per famiglia e grado limitano il pool dei sostituti. Se li usi entrambi, ogni sostituto deve corrispondere a entrambi. I filtri non limitano i mostri originali da randomizzare. Se un record MONP è condiviso da più incontri, la modifica può riguardare ogni incontro che lo usa.
+I filtri per famiglia e grado restringono i possibili sostituti. Se li usi entrambi, ogni sostituto deve rispettarli entrambi. I filtri non limitano i mostri originali da sostituire. Se più incontri condividono un record MONP, la modifica riguarda tutti quegli incontri.
 
-Il leader SMOT segue il riferimento MONP a +2 se entrambi i record indicano la stessa specie originale. Se i dati di partenza non coincidono, il leader riceve un sostituto separato della stessa taglia. L'app conserva questa differenza. I compagni restano collegati ai propri record MONP.
+Per il mostro leader, il randomizer usa il riferimento MONP all'offset +2 se il record SMOT e il record MONP indicano la stessa specie di partenza. Se i dati di partenza non coincidono, il leader riceve un sostituto distinto della stessa taglia. L'app mantiene questa differenza. Gli alleati restano associati ai rispettivi record MONP.
 
-Nella copia RomFS usata per questa analisi, 596 ID MONP compaiono in più righe SMOT. Nei Prati Silenziosi, le definizioni Capporcello 4 e 14 condividono gli ID 10/11/12. La definizione 41 usa gli ID 97/98/99. Le definizioni 4 e 14 ricevono gli stessi sostituti perché condividono i record. Anche le entità che usano lo stesso record di battaglia restano uguali. Per distinguerle bisognerebbe modificare le assegnazioni degli spawn, che il randomizer non cambia.
+Nel RomFS analizzato, 596 ID MONP compaiono in più righe SMOT. Nei Prati Silenziosi, le definizioni 4 e 14 di Capporcello condividono gli ID 10/11/12; la definizione 41 usa gli ID 97/98/99. Le definizioni 4 e 14 ricevono gli stessi sostituti perché condividono i record. Anche gli incontri che usano lo stesso record di battaglia ricevono lo stesso sostituto. Per assegnare sostituti diversi bisognerebbe modificare i punti di comparsa, cosa che il randomizer non fa.
 
 ### ⚠️ Eventi e boss
 
-L'opzione dei sostituti speciali aggiunge specie compatibili di eventi e boss al catalogo. L'opzione non selvatici modifica anche record MONP fuori dagli incontri selvatici. Può riguardare più dei soli boss.
+L'opzione per includere mostri degli eventi e dei boss aggiunge ai possibili sostituti le specie con taglia e modello compatibili. L'opzione per gli incontri non selvatici modifica anche i record MONP usati fuori dagli incontri selvatici. Può riguardare eventi, boss, personaggi e tornei.
 
-`MonsterPartyTable.tp` / PTYT contiene valori numerici che coincidono con ID MONP. Il manifest segnala queste corrispondenze, ma il loro significato non è confermato. Gli script delle scene possono mantenere modelli fissi. I controlli dei file non dimostrano che animazioni, reclutamento o progressione funzionino in gioco.
+`MonsterPartyTable.tp` / PTYT contiene valori numerici che corrispondono a ID MONP. Il manifest elenca queste corrispondenze, ma il loro significato non è stato confermato. Gli script delle scene possono mantenere i modelli originali. Le verifiche dei file non garantiscono che animazioni, reclutamento o avanzamento della storia funzionino correttamente nel gioco.
