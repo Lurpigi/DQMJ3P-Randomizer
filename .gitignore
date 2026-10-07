@@ -1,0 +1,6 @@
+output/*
+!output/.gitkeep
+__pycache__/
+*.py[cod]
+/developer/
+/src/dqmj3p_randomizer/resources/game_data/
