@@ -41,6 +41,8 @@ def _files_to_package() -> list[tuple[Path, str]]:
     for name in ("README.md", "randomizer_app.py", "randomize.py", "package_program.py"):
         add_file(PROGRAM_ROOT / name, name)
     add_file(PROGRAM_ROOT / "img" / "img.png", "img/img.png")
+    for name in ("beast.png","break.png","demon.png","dragon.png","material.png","nature.png","slime.png","special.png","undead.png"):
+        add_file(PROGRAM_ROOT / "img" / "family_icons" / name, f"img/family_icons/{name}")
 
     source_root = PROGRAM_ROOT / "src" / "dqmj3p_randomizer"
     for path in sorted(source_root.rglob("*"), key=lambda item: item.as_posix().casefold()):

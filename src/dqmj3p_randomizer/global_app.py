@@ -452,7 +452,8 @@ class GlobalRandomizerApp:
         )
 
     def _family_icon_widget(self, parent: ttk.Frame, code: int) -> tk.Widget:
-        icon = tk.PhotoImage(file=f"./img/family_icons/{FAMILY_ICONS.get(code)}.png")
+        link = f"img/family_icons/{FAMILY_ICONS.get(code)}.png"
+        icon = tk.PhotoImage(file=str(self.project / link ))
         label = ttk.Label(
             parent, image=icon, width=3, anchor="center")
         label.image = icon
