@@ -21,6 +21,7 @@ def _parameter_tables() -> tuple[bytes, bytes, bytes, bytes]:
         row[:len(name)] = name.encode("ascii")
         struct.pack_into("<HBBH", row, 32, kind, 1, 3, 1)
         struct.pack_into("<H", row, 48, size_code)
+        struct.pack_into("<H", row, 66, kind // 100)
         if len(kinds) < 4 + (kind + 1) * 120:
             kinds.extend(bytes(4 + (kind + 1) * 120 - len(kinds)))
         kinds[4 + kind * 120:4 + (kind + 1) * 120] = row
@@ -35,6 +36,7 @@ def _parameter_tables() -> tuple[bytes, bytes, bytes, bytes]:
     for instance, kind in ((100, 300), (200, 400), (300, 500), (400, 600), (500, 700), (600, 800), (700, 900)):
         row = bytearray(72)
         struct.pack_into("<HH", row, 0, instance, kind)
+        struct.pack_into("<3H", row, 64, kind // 100, 101, 102)
         monster.extend(row)
     party = bytearray(b"PTYT")
     party_row = bytearray(44)

@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from dqmj3p_randomizer.romfs_source import RomFsSource
+from dqmj3p_randomizer.global_catalog import parse_kind_catalog, parse_monp_instances
 from dqmj3p_randomizer.global_randomizer import GlobalRandomizerError, patch_et_archive
 from dqmj3p_randomizer.global_service import build_global_overlay
 from support import make_romfs_layers
@@ -49,6 +50,19 @@ class GlobalServiceTests(unittest.TestCase):
             config = json.loads(config_text)
             self.assertEqual(config["donor_family_codes"], [3])
             self.assertEqual(config["donor_rank_codes"], [1])
+            self.assertFalse(config["randomize_skills"])
+            self.assertEqual(config["skill_mode"], "species")
+            self.assertEqual(manifest["options"]["skill_mode"], "species")
+            self.assertGreater(manifest["scope"]["changed_monp_skill_instance_count"], 0)
+            native = {
+                row["kind_id"]: row["native_skill_id"]
+                for row in parse_kind_catalog(dataset.read("data/Parameter/KindParam.tp"))["species"]
+            }
+            patched = parse_monp_instances((output / "romfs/data/Parameter/MonsterParam.tp").read_bytes())
+            for mapping in manifest["skill_mappings"]:
+                row = patched["instances"][mapping["instance_id"]]
+                self.assertEqual(row["skill_ids"], (native[row["kind_id"]], 101, 102))
+                self.assertEqual(mapping["target_skill_ids"], list(row["skill_ids"]))
             self.assertNotIn("individual_spawns", manifest["options"])
             self.assertGreater(manifest["scope"]["changed_monp_instance_count"], 0)
             self.assertEqual(manifest["leader_rules"]["primary_ref_matched_original_smot_kind"] +
@@ -68,6 +82,32 @@ class GlobalServiceTests(unittest.TestCase):
     def test_invalid_xbb_is_rejected(self) -> None:
         with self.assertRaises(GlobalRandomizerError):
             patch_et_archive(b"not an XBB", "ET_BAD.xbb", smot_row_mapping={})
+
+    def test_random_skills_are_written_to_package_config_and_spoiler(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary) / "program"
+            project.mkdir()
+            base, update = make_romfs_layers(Path(temporary) / "base", Path(temporary) / "update")
+            results = [
+                build_global_overlay(
+                    project_root=project, base_romfs_root=base, update_romfs_root=update,
+                    seed=42, output_name=name, randomize_skills=True,
+                )
+                for name in ("first", "second")
+            ]
+            self.assertEqual(results[0]["manifest"]["skill_mappings"], results[1]["manifest"]["skill_mappings"])
+            output = Path(results[0]["output_dir"])
+            config = json.loads((output / "config.json").read_text(encoding="utf-8"))
+            self.assertTrue(config["randomize_skills"])
+            self.assertEqual(config["skill_mode"], "random")
+            self.assertEqual(results[0]["manifest"]["options"]["skill_mode"], "random")
+            self.assertIn("modalità random", (output / "spoiler.txt").read_text(encoding="utf-8"))
+            patched = parse_monp_instances((output / "romfs/data/Parameter/MonsterParam.tp").read_bytes())
+            for mapping in results[0]["manifest"]["skill_mappings"]:
+                skills = patched["instances"][mapping["instance_id"]]["skill_ids"]
+                self.assertEqual(len(set(skills)), 3)
+                self.assertTrue(set(skills) <= {3, 4, 5, 6, 7, 8, 9, 101, 102})
+                self.assertEqual(list(skills), mapping["target_skill_ids"])
 
 
 if __name__ == "__main__":

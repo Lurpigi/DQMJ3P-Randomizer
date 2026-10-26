@@ -84,6 +84,7 @@ def build_global_overlay(
     include_special_donors: bool = False,
     include_nonwild_instances: bool = False,
     randomize_levels: bool = False,
+    randomize_skills: bool = False,
     donor_family_codes: frozenset[int] | None = None,
     donor_rank_codes: frozenset[int] | None = None,
 ) -> dict[str, Any]:
@@ -122,6 +123,7 @@ def build_global_overlay(
         include_special_donors=include_special_donors,
         include_nonwild_instances=include_nonwild_instances,
         randomize_levels=randomize_levels,
+        randomize_skills=randomize_skills,
         donor_family_codes=donor_family_codes,
         donor_rank_codes=donor_rank_codes,
     )
@@ -133,6 +135,7 @@ def build_global_overlay(
         include_nonwild_instances=include_nonwild_instances,
         instance_mapping=plan["instance_mapping"],
         level_mapping=plan["level_mapping"],
+        skill_mapping=plan["skill_mapping"],
     )
     changed_instance_ids = set(monster_audit["modified_instance_ids"])
 
@@ -205,6 +208,8 @@ def build_global_overlay(
             "include_special_donors": include_special_donors,
             "include_nonwild_instances": include_nonwild_instances,
             "randomize_levels": randomize_levels,
+            "randomize_skills": randomize_skills,
+            "skill_mode": plan["skill_mode"],
             "level_range": [MIN_MONSTER_LEVEL, MAX_MONSTER_LEVEL] if randomize_levels else None,
             "donor_family_codes": (
                 sorted(options.donor_family_codes)
@@ -240,6 +245,8 @@ def build_global_overlay(
             "changed_monp_instance_count": len(changed_instance_ids),
             "randomized_level_instance_count": len(plan["level_mapping"]),
             "changed_monp_level_instance_count": len(monster_audit["modified_level_instance_ids"]),
+            "changed_monp_skill_instance_count": len(monster_audit["modified_skill_instance_ids"]),
+            "skill_pool_count": plan["skill_pool_count"],
             "unknown_size_kinds_unchanged": plan["unknown_size_kind_count"],
             "include_nonwild_instances": include_nonwild_instances,
             "monp_ids_shared_across_smot_rows": len(shared_ids),
@@ -251,6 +258,14 @@ def build_global_overlay(
             "include_special_donors": include_special_donors,
         },
         "instance_mappings": instance_rows,
+        "skill_mappings": [
+            {
+                "instance_id": row["instance_id"],
+                "source_skill_ids": row["source_skill_ids"],
+                "target_skill_ids": row["target_skill_ids"],
+            }
+            for row in instance_rows
+        ],
         "level_mappings": [
             {
                 "instance_id": row["instance_id"],
@@ -270,7 +285,7 @@ def build_global_overlay(
         "modified_files": file_audits,
         "validation": {
             "same_size_mapping": True,
-            "only_monp_kind_plus2_optional_level_plus24_and_smot_kind_plus4_changed": True,
+            "only_monp_kind_plus2_level_plus24_skills_plus64_66_68_and_smot_kind_plus4_changed": True,
             "all_user_source_files_read_only": True,
             "monp_ids_reuse_seeded_mapping": True,
         },
@@ -278,13 +293,18 @@ def build_global_overlay(
             "Il pacchetto legge solo i file necessari dal RomFS scelto dall'utente e non modifica i file originali.",
             "I quattro valori PTYT sono segnalati perché coincidono numericamente con ID MONP; il loro significato non è confermato.",
             "La modalità eventi include i record MONP fuori dagli incontri SMOT, ma non distingue i record di boss, eventi o contenuti della storia.",
-            "Le specie senza una taglia nota o senza un sostituto con lo stesso numero di slot restano invariate.",
+            "Le specie senza una taglia nota o senza un sostituto con lo stesso numero di slot non vengono sostituite.",
         ],
     }
     spoiler = [f"Seed: {seed}", "", "Sostituzioni per record MONP:"]
     spoiler.extend(
         f"- ID {row['instance_id']}: {row['source_name'] or 'kind ' + str(row['source_kind_id'])} -> "
         f"{row['donor_name'] or 'kind ' + str(row['donor_kind_id'])} ({row['size_slots']} slot)"
+        for row in instance_rows
+    )
+    spoiler.extend(["", f"Set di abilità per record MONP (modalità {plan['skill_mode']}):"])
+    spoiler.extend(
+        f"- ID {row['instance_id']}: {row['source_skill_ids']} -> {row['target_skill_ids']}"
         for row in instance_rows
     )
     if randomize_levels:
@@ -330,6 +350,8 @@ def build_global_overlay(
             "include_special_donors": include_special_donors,
             "include_nonwild_instances": include_nonwild_instances,
             "randomize_levels": randomize_levels,
+            "randomize_skills": randomize_skills,
+            "skill_mode": plan["skill_mode"],
             "level_range": [MIN_MONSTER_LEVEL, MAX_MONSTER_LEVEL] if randomize_levels else None,
             "donor_family_codes": (
                 sorted(options.donor_family_codes)

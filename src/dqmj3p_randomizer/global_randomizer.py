@@ -8,7 +8,9 @@ import struct
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-from .global_catalog import GlobalCatalogError, MONP_LEVEL_OFFSET, parse_monp_instances
+from .global_catalog import (
+    GlobalCatalogError, MONP_LEVEL_OFFSET, MONP_SKILL_OFFSETS, parse_monp_instances,
+)
 from .global_encounters import SMOT_STRIDE
 from .inspector import XbbFormatError, parse_xbb_bytes
 
@@ -28,6 +30,7 @@ class GlobalOptions:
     include_special_donors: bool = False
     include_nonwild_instances: bool = False
     randomize_levels: bool = False
+    randomize_skills: bool = False
     avoid_fixed_points: bool = True
     donor_family_codes: frozenset[int] | None = None
     donor_rank_codes: frozenset[int] | None = None
@@ -36,7 +39,7 @@ class GlobalOptions:
         if isinstance(self.seed, bool) or not isinstance(self.seed, int) or not 0 <= self.seed < 2**64:
             raise GlobalRandomizerError("Il seed deve essere un numero intero senza segno a 64 bit")
         for name in (
-            "include_special_donors", "include_nonwild_instances", "randomize_levels",
+            "include_special_donors", "include_nonwild_instances", "randomize_levels", "randomize_skills",
             "avoid_fixed_points",
         ):
             if not isinstance(getattr(self, name), bool):
@@ -83,6 +86,14 @@ def plan_encounter_randomization(
     instances = catalog.get("monp_instances", {})
     if not species or not instances:
         raise GlobalRandomizerError("Catalogo KINP/MONP vuoto o non valido")
+
+    # Use skill IDs already assigned in the source tables, never arbitrary IDs.
+    skill_pool = sorted(
+        {row["native_skill_id"] for row in species.values() if row["native_skill_id"]}
+        | {skill for row in instances.values() if row["kind_id"] for skill in row["skill_ids"] if skill}
+    )
+    if options.randomize_skills and not skill_pool:
+        raise GlobalRandomizerError("Nessun set di abilità disponibile nei dati di gioco")
 
     donor_family_codes = options.donor_family_codes
     donor_rank_codes = options.donor_rank_codes
@@ -173,6 +184,7 @@ def plan_encounter_randomization(
     # MONP +2 is the per-instance species field; IDs are stable links shared by SMOT rows.
     instance_mapping: dict[int, int] = {}
     level_mapping: dict[int, int] = {}
+    skill_mapping: dict[int, tuple[int, ...]] = {}
     instance_rows: list[dict[str, Any]] = []
     unchanged: list[dict[str, Any]] = []
     for instance_id in sorted(selected_ids):
@@ -195,12 +207,37 @@ def plan_encounter_randomization(
                 raise GlobalRandomizerError(f"Livello non pianificato per l'ID MONP {instance_id}")
             target_level = selected_level
             level_mapping[instance_id] = selected_level
+        source_skills = row["skill_ids"]
+        if options.randomize_skills:
+            target_skills = [0, 0, 0]
+            available_skills = list(skill_pool)
+            for slot in (0, 1, 2):
+                if slot and not source_skills[slot]:
+                    continue
+                skill = _seeded_choice(options.seed, f"skill:{instance_id}:{slot}", available_skills)
+                if skill is None:
+                    break
+                target_skills[slot] = skill
+                available_skills.remove(skill)
+        else:
+            # Only the first skill is species-specific; retain supplemental sets.
+            native_skill = species.get(donor, {}).get("native_skill_id", source_skills[0])
+            target_skills = [native_skill, *source_skills[1:]]
+            seen_skills: set[int] = set()
+            for slot, skill in enumerate(target_skills):
+                if skill in seen_skills:
+                    target_skills[slot] = 0
+                elif skill:
+                    seen_skills.add(skill)
+        skill_mapping[instance_id] = tuple(target_skills)
         instance_rows.append({
             "instance_id": instance_id,
             "source_kind_id": source_kind,
             "donor_kind_id": donor,
             "source_level": source_level,
             "target_level": target_level,
+            "source_skill_ids": list(source_skills),
+            "target_skill_ids": target_skills,
             "size_slots": species.get(source_kind, {}).get("size_slots"),
             "reason": reason,
         })
@@ -262,11 +299,15 @@ def plan_encounter_randomization(
         "include_special_donors": options.include_special_donors,
         "include_nonwild_instances": options.include_nonwild_instances,
         "randomize_levels": options.randomize_levels,
+        "randomize_skills": options.randomize_skills,
+        "skill_mode": "random" if options.randomize_skills else "species",
+        "skill_pool_count": len(skill_pool),
         "level_range": [MIN_MONSTER_LEVEL, MAX_MONSTER_LEVEL] if options.randomize_levels else None,
         "donor_family_codes": sorted(donor_family_codes) if donor_family_codes is not None else None,
         "donor_rank_codes": sorted(donor_rank_codes) if donor_rank_codes is not None else None,
         "instance_mapping": instance_mapping,
         "level_mapping": level_mapping,
+        "skill_mapping": skill_mapping,
         "instance_rows": instance_rows,
         "smot_row_mapping": row_mappings,
         "smot_row_details": row_details,
@@ -319,8 +360,9 @@ def patch_monsterparam(
     include_nonwild_instances: bool = False,
     instance_mapping: Mapping[int, int],
     level_mapping: Mapping[int, int] | None = None,
+    skill_mapping: Mapping[int, tuple[int, ...]] | None = None,
 ) -> tuple[bytes, dict[str, Any]]:
-    """Patch only MONP species (+2) and optional level (+24) fields."""
+    """Patch only MONP species (+2), level (+24), and skill (+64/+66/+68) fields."""
     try:
         parsed = parse_monp_instances(data)
     except GlobalCatalogError as exc:
@@ -330,6 +372,20 @@ def patch_monsterparam(
     if unknown:
         raise GlobalRandomizerError(f"ID MONP selezionati non trovati: {sorted(unknown)[:8]}")
     level_mapping = level_mapping or {}
+    skill_mapping = skill_mapping or {}
+    unknown_skill_ids = set(skill_mapping) - selected
+    if unknown_skill_ids:
+        raise GlobalRandomizerError(
+            f"ID MONP con abilità pianificate ma non selezionati: {sorted(unknown_skill_ids)[:8]}"
+        )
+    for instance_id, skills in skill_mapping.items():
+        if len(skills) != len(MONP_SKILL_OFFSETS) or any(
+            isinstance(skill, bool) or not isinstance(skill, int) or not 0 <= skill <= 0xFFFF
+            for skill in skills
+        ):
+            raise GlobalRandomizerError(f"Set di abilità non validi per l'ID MONP {instance_id}")
+        if parsed["instances"][instance_id]["kind_id"] == 0:
+            raise GlobalRandomizerError(f"Non è possibile assegnare abilità al record MONP vuoto {instance_id}")
     unknown_level_ids = set(level_mapping) - selected
     if unknown_level_ids:
         raise GlobalRandomizerError(
@@ -346,6 +402,7 @@ def patch_monsterparam(
     allowed: set[int] = set()
     patched_kind_ids: list[int] = []
     patched_level_ids: list[int] = []
+    patched_skill_ids: list[int] = []
     patched_ids: set[int] = set()
     for instance_id in sorted(selected):
         row = parsed["instances"][instance_id]
@@ -366,11 +423,22 @@ def patch_monsterparam(
             struct.pack_into("<H", output, offset, new_level)
             patched_level_ids.append(instance_id)
             patched_ids.add(instance_id)
+        old_skills = row["skill_ids"]
+        new_skills = skill_mapping.get(instance_id, old_skills)
+        if new_skills != old_skills:
+            for relative, old_skill, new_skill in zip(MONP_SKILL_OFFSETS, old_skills, new_skills):
+                if new_skill != old_skill:
+                    offset = row["record_offset"] + relative
+                    allowed.update((offset, offset + 1))
+                    struct.pack_into("<H", output, offset, new_skill)
+            patched_skill_ids.append(instance_id)
+            patched_ids.add(instance_id)
     result = bytes(output)
     audit = _audit_changes(data, result, allowed, "data/Parameter/MonsterParam.tp")
     audit["modified_instance_ids"] = sorted(patched_ids)
     audit["modified_kind_instance_ids"] = patched_kind_ids
     audit["modified_level_instance_ids"] = patched_level_ids
+    audit["modified_skill_instance_ids"] = patched_skill_ids
     audit["selected_instance_count"] = len(selected)
     return result, audit
 

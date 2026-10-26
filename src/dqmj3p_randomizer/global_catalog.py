@@ -13,7 +13,9 @@ KINP_HEADER = b"KINP"
 KINP_STRIDE = 120
 KINP_SIZE_OFFSET = 48
 KINP_NAME_BYTES = 32
+KINP_NATIVE_SKILL_OFFSET = 66
 MONP_LEVEL_OFFSET = 24
+MONP_SKILL_OFFSETS = (64, 66, 68)
 KCOP_STRIDE = 88
 KCOP_MODEL_OFFSET = 2
 SIZE_CODE_TO_SLOTS = {0: 1, 1: 1, 2: 2, 3: 3, 4: 4}
@@ -61,6 +63,7 @@ def parse_kind_catalog(kindparam: bytes) -> dict[str, Any]:
         order = struct.unpack_from("<H", kindparam, offset + 32)[0]
         rank_code, family_code = struct.unpack_from("<BB", kindparam, offset + 34)
         size_code = struct.unpack_from("<H", kindparam, offset + KINP_SIZE_OFFSET)[0]
+        native_skill_id = struct.unpack_from("<H", kindparam, offset + KINP_NATIVE_SKILL_OFFSET)[0]
         species.append({
             "kind_id": kind_id,
             "name": name,
@@ -71,6 +74,7 @@ def parse_kind_catalog(kindparam: bytes) -> dict[str, Any]:
             "family": FAMILY_CODES.get(family_code),
             "size_code": size_code,
             "size_slots": SIZE_CODE_TO_SLOTS.get(size_code),
+            "native_skill_id": native_skill_id,
             "record_offset": offset,
         })
     return {
@@ -86,7 +90,7 @@ def parse_kind_catalog(kindparam: bytes) -> dict[str, Any]:
 def parse_monp_instances(monsterparam: bytes) -> dict[str, Any]:
     if len(monsterparam) < 4 or monsterparam[:4] != b"MONP" or (len(monsterparam) - 4) % MONP_STRIDE:
         raise GlobalCatalogError("MonsterParam.tp non corrisponde a MONP/72 byte")
-    rows_by_id: dict[int, dict[str, int]] = {}
+    rows_by_id: dict[int, dict[str, Any]] = {}
     by_kind: dict[int, list[int]] = {}
     row_count = (len(monsterparam) - 4) // MONP_STRIDE
     for index in range(row_count):
@@ -101,6 +105,10 @@ def parse_monp_instances(monsterparam: bytes) -> dict[str, Any]:
             "instance_id": instance_id,
             "kind_id": kind_id,
             "level": level,
+            "skill_ids": tuple(
+                struct.unpack_from("<H", monsterparam, offset + skill_offset)[0]
+                for skill_offset in MONP_SKILL_OFFSETS
+            ),
             "record_index": index,
             "record_offset": offset,
         }

@@ -41,9 +41,13 @@ class InfoTooltipTests(unittest.TestCase):
             widget for widget in descendants(app.advanced)
             if isinstance(widget, ttk.Label) and widget.cget("text") == "ⓘ"
         ]
-        self.assertEqual(len(icons), 3)
+        self.assertEqual(len(icons), 4)
         icon = icons[0]
         self.assertEqual(str(icon.cget("takefocus")), "1")
+        self.assertFalse(app.skills_var.get())
+        _, skills_tooltip, skills_key, _ = app.advanced_options[1]
+        self.assertEqual(skills_key, "randomize_skills")
+        self.assertIs(skills_tooltip, icons[1].tooltip)
 
         levels_checkbox, levels_tooltip, label_key, _ = app.advanced_options[0]
         self.assertEqual(label_key, "randomize_levels")

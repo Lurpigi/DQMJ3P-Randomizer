@@ -15,7 +15,7 @@ The app does not include game files. Select two already extracted folders: the b
 | `MonsterParam.tp` / MONP | 4-byte header, 72-byte records | 16-bit little-endian value at +2; record ID at +0 |
 | SMOT in ET / XBB archives | 4-byte header, 116-byte records | 16-bit little-endian value at +4; MONP references at +2, +6, and +8 |
 
-The randomizer changes only the species fields above and, when enabled, the MONP level field at +24. File lengths, IDs, references, and all other bytes stay the same. This includes ENCT, MGRT, and FADT. The app does not add MONP records or rewrite positions and scripts.
+The randomizer changes the species fields above, the MONP skill fields at +64/+66/+68 and, when enabled, the MONP level field at +24. File lengths, IDs, references, and all other bytes stay the same. This includes ENCT, MGRT, and FADT. The app does not add MONP records or rewrite positions and scripts.
 
 ### 🏅 Monster rank
 
@@ -39,6 +39,12 @@ A replacement must have a known size, a MONP record, and an in-game model. With 
 ### 🎚️ Monster level
 
 `MonsterParam.tp` / MONP stores the starting level as a 16-bit little-endian value at +24. When enabled, the level option assigns each selected MONP record a seeded level from 1 to 99. Encounters that share a MONP ID also share its level.
+
+### ✨ Skill sets
+
+`KindParam.tp` / KINP stores each species' native skill set ID as a 16-bit little-endian value at +66. MONP stores three skill set IDs at +64, +66 and +68. By default, the first MONP slot receives the replacement species' native set. The other two slots are retained, with duplicate sets cleared. A species with no native set has a zero in its first slot.
+
+`--randomize-skills` assigns random sets to the first slot and any occupied supplemental slots. The pool contains nonzero skill IDs already assigned in KINP or nonempty MONP records; family and rank filters do not restrict it. Sets cannot repeat within one record. Empty supplemental slots stay empty; if the pool is too small, remaining slots are cleared. Choices use the seed and MONP ID, so shared records keep the same sets. The manifest, config and spoiler record the selected mode and assignments.
 
 ### 🧩 How records map
 
@@ -69,7 +75,7 @@ L'app non include file di gioco. Seleziona le cartelle RomFS già estratte del g
 | `MonsterParam.tp` / MONP | Intestazione di 4 byte, record di 72 byte | Valore little-endian a 16 bit all'offset +2; ID del record all'offset +0 |
 | SMOT negli archivi ET / XBB | Intestazione di 4 byte, record di 116 byte | Valore little-endian a 16 bit all'offset +4; riferimenti MONP agli offset +2, +6 e +8 |
 
-Il randomizer modifica solo i campi della specie indicati e, se attivi l'opzione, il livello MONP all'offset +24. Non cambia la lunghezza dei file, gli ID, i riferimenti o gli altri byte. I dati ENCT, MGRT e FADT restano invariati. L'app non aggiunge record MONP e non riscrive posizioni o script.
+Il randomizer modifica i campi della specie indicati, le abilità MONP agli offset +64/+66/+68 e, se attivi l'opzione, il livello MONP all'offset +24. Non cambia la lunghezza dei file, gli ID, i riferimenti o gli altri byte. I dati ENCT, MGRT e FADT restano invariati. L'app non aggiunge record MONP e non riscrive posizioni o script.
 
 ### 🏅 Grado dei mostri
 
@@ -93,6 +99,12 @@ Un sostituto deve avere una taglia nota, un record MONP e un modello presente ne
 ### 🎚️ Livello dei mostri
 
 `MonsterParam.tp` / MONP memorizza il livello iniziale in un valore little-endian a 16 bit all'offset +24. Se attivi l'opzione, ogni record MONP selezionato riceve un livello deterministico da 1 a 99. Gli incontri che condividono un ID MONP condividono anche il livello.
+
+### ✨ Set di abilità
+
+`KindParam.tp` / KINP memorizza l'ID del set nativo di ciascuna specie in un valore little-endian a 16 bit all'offset +66. MONP memorizza tre ID di set agli offset +64, +66 e +68. Di norma, il primo slot MONP riceve il set nativo della nuova specie. Gli altri due vengono conservati, eliminando eventuali duplicati. Se una specie non ha un set nativo, il primo slot vale zero.
+
+`--randomize-skills` assegna set casuali al primo slot e agli slot aggiuntivi occupati. Il pool contiene gli ID non nulli già assegnati in KINP o nei record MONP con una specie; i filtri per famiglia e grado non lo restringono. Un record non può ricevere set duplicati. Gli slot aggiuntivi vuoti restano vuoti; se i set disponibili non bastano, gli slot rimanenti vengono azzerati. Le scelte dipendono dal seed e dall'ID MONP, quindi i record condivisi ricevono gli stessi set. Manifest, configurazione e riepilogo riportano la modalità scelta e le assegnazioni.
 
 ### 🧩 Collegamento tra i record
 
@@ -123,7 +135,7 @@ L'application ne contient paqs de fichiers du jeu. Sélectionnez des dossiers d�
 | `MonsterParam.tp` / MONP | header de 4 bytes, entrées de 72 bytes | valeur de 16 bits petit-boutisme à +2; entrée de l'ID à +0 |
 | SMOT en ET / archives XBB | header de 4 bytes, entrées de 116 bytes | valeur de 16 bits petit-boutisme à +4; Références MONP à +2, +6 et +8 |
 
-Le randomizer ne change que les champs d'espèce ci-dessus et, si l'option est activée, le niveau MONP à +24. La longueur des fichiers, les IDs, les références et tous les autres octets restent inchangés. Cela inclut ENCT, MGRT et FADT. L'application n'ajoute pas d'entrées MONP et ne réécrit ni les positions ni les scripts.
+Le randomizer modifie les champs d'espèce ci-dessus, les compétences MONP à +64/+66/+68 et, si l'option est activée, le niveau MONP à +24. La longueur des fichiers, les IDs, les références et tous les autres octets restent inchangés. Cela inclut ENCT, MGRT et FADT. L'application n'ajoute pas d'entrées MONP et ne réécrit ni les positions ni les scripts.
 
 ### 🏅 Rang de monstre
 
@@ -147,6 +159,12 @@ Un remplacement doit avoir une taille connue, une entrée MONP et un modèle en 
 ### 🎚️ Niveau des monstres
 
 `MonsterParam.tp` / MONP stocke le niveau initial comme valeur little-endian de 16 bits à +24. Si l'option est activée, chaque entrée MONP sélectionnée reçoit un niveau déterminé par la graine, entre 1 et 99. Les rencontres qui partagent un ID MONP partagent aussi son niveau.
+
+### ✨ Sets de compétences
+
+`KindParam.tp` / KINP stocke l'ID du set natif de chaque espèce dans une valeur little-endian de 16 bits à +66. MONP stocke trois IDs de sets à +64, +66 et +68. Par défaut, le premier emplacement MONP reçoit le set natif de la nouvelle espèce. Les deux autres sont conservés, sans doublons. Une espèce sans set natif a un zéro dans le premier emplacement.
+
+`--randomize-skills` attribue des sets aléatoires au premier emplacement et aux emplacements supplémentaires occupés. Le pool contient les IDs non nuls déjà attribués dans KINP ou dans les entrées MONP avec une espèce ; les filtres de famille et de rang ne le limitent pas. Aucun set ne peut apparaître deux fois dans une entrée. Les emplacements supplémentaires vides restent vides ; si le pool est trop petit, les emplacements restants sont vidés. La graine et l'ID MONP déterminent les choix, donc les entrées partagées gardent les mêmes sets. Le manifeste, la configuration et le fichier de spoilers indiquent le mode et les attributions.
 
 ### 🧩 Comment les entrées sont liées
 

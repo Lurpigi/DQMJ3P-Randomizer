@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from dqmj3p_randomizer.global_catalog import merge_global_catalog
+from dqmj3p_randomizer.global_catalog import merge_global_catalog, parse_monp_instances
 from dqmj3p_randomizer.global_randomizer import (
     GlobalOptions,
     patch_et_archive,
@@ -30,6 +30,7 @@ def _tables() -> tuple[bytes, bytes, bytes, set[str]]:
         row[:len(name)] = name.encode("ascii")
         struct.pack_into("<HBBH", row, 32, kind, rank_code, family_code, 1)
         struct.pack_into("<H", row, 48, size_code)
+        struct.pack_into("<H", row, 66, kind // 100)
         if len(kinds) < 4 + (kind + 1) * 120:
             kinds.extend(bytes(4 + (kind + 1) * 120 - len(kinds)))
         kinds[4 + kind * 120:4 + (kind + 1) * 120] = row
@@ -45,6 +46,7 @@ def _tables() -> tuple[bytes, bytes, bytes, set[str]]:
         row = bytearray(72)
         struct.pack_into("<HH", row, 0, instance, kind)
         row[4:] = bytes([instance // 100]) * 68
+        struct.pack_into("<3H", row, 64, kind // 100, 101, 102)
         monster.extend(row)
     assets = {f"data/Model/{model}.bch" for model in ("m300", "m400", "m500", "m600", "m700", "m800")}
     return bytes(kinds), bytes(monster), bytes(models), assets
@@ -127,6 +129,96 @@ class GlobalRandomizerTests(unittest.TestCase):
         self.assertNotIn(900, special["donor_kind_ids"])
         self.assertIn(600, special["donor_kind_ids"])
         self.assertIn(700, special["donor_kind_ids"])
+
+    def test_default_skills_follow_species_and_preserve_supplemental_sets(self) -> None:
+        plan = plan_encounter_randomization(self.catalog, self.inventory, GlobalOptions(seed=73))
+        native_skills = {row["kind_id"]: row["native_skill_id"] for row in self.catalog["species"]}
+        self.assertEqual(plan["skill_mode"], "species")
+        for instance, kind in plan["instance_mapping"].items():
+            self.assertEqual(plan["skill_mapping"][instance], (native_skills[kind], 101, 102))
+        patched, audit = patch_monsterparam(
+            self.monsterparam, set(plan["selected_instance_ids"]),
+            instance_mapping=plan["instance_mapping"], skill_mapping=plan["skill_mapping"],
+        )
+        instances = parse_monp_instances(patched)["instances"]
+        self.assertEqual(audit["modified_skill_instance_ids"], [100, 200, 300])
+        for instance in (100, 200, 300):
+            self.assertEqual(instances[instance]["skill_ids"][0], native_skills[instances[instance]["kind_id"]])
+        for instance in (400, 500, 600, 700):
+            self.assertEqual(instances[instance], self.catalog["monp_instances"][instance])
+        allowed = {4 + i * 72 + byte for i in range(3) for byte in (2, 3, 64, 65, 66, 67, 68, 69)}
+        changed = {i for i, (a, b) in enumerate(zip(self.monsterparam, patched)) if a != b}
+        self.assertTrue(changed <= allowed)
+
+    def test_random_skills_are_seeded_distinct_and_do_not_change_species_or_level_choices(self) -> None:
+        baseline = plan_encounter_randomization(
+            self.catalog, self.inventory, GlobalOptions(seed=73, randomize_levels=True),
+        )
+        options = GlobalOptions(seed=73, randomize_levels=True, randomize_skills=True)
+        plan = plan_encounter_randomization(self.catalog, self.inventory, options)
+        repeated = plan_encounter_randomization(self.catalog, self.inventory, options)
+        self.assertEqual(plan["skill_mode"], "random")
+        self.assertEqual(plan["skill_mapping"], repeated["skill_mapping"])
+        self.assertEqual(plan["instance_mapping"], baseline["instance_mapping"])
+        self.assertEqual(plan["level_mapping"], baseline["level_mapping"])
+        self.assertNotEqual(plan["skill_mapping"], baseline["skill_mapping"])
+        pool = {3, 4, 5, 6, 7, 8, 9, 101, 102}
+        for skills in plan["skill_mapping"].values():
+            self.assertEqual(len(set(skills)), 3)
+            self.assertTrue(set(skills) <= pool)
+        other_seed = plan_encounter_randomization(
+            self.catalog, self.inventory, GlobalOptions(seed=74, randomize_skills=True),
+        )
+        self.assertNotEqual(plan["skill_mapping"], other_seed["skill_mapping"])
+        patched, audit = patch_monsterparam(
+            self.monsterparam, set(plan["selected_instance_ids"]),
+            instance_mapping=plan["instance_mapping"], level_mapping=plan["level_mapping"],
+            skill_mapping=plan["skill_mapping"],
+        )
+        for instance, skills in plan["skill_mapping"].items():
+            row = parse_monp_instances(patched)["instances"][instance]
+            self.assertEqual(row["skill_ids"], skills)
+            self.assertEqual(row["level"], plan["level_mapping"][instance])
+        allowed = {4 + i * 72 + byte for i in range(3) for byte in (2, 3, 24, 25, 64, 65, 66, 67, 68, 69)}
+        changed = {i for i, (a, b) in enumerate(zip(self.monsterparam, patched)) if a != b}
+        self.assertTrue(changed <= allowed)
+        self.assertEqual(audit["modified_skill_instance_ids"], [100, 200, 300])
+
+    def test_default_skills_remove_duplicates_of_native_set(self) -> None:
+        for row in self.catalog["monp_instances"].values():
+            row["skill_ids"] = (row["skill_ids"][0], 4, 101)
+        plan = plan_encounter_randomization(
+            self.catalog, self.inventory, GlobalOptions(seed=73, donor_family_codes=frozenset({2})),
+        )
+        self.assertTrue(all(skills == (4, 0, 101) for skills in plan["skill_mapping"].values()))
+
+    def test_random_skills_preserve_empty_supplemental_slots_and_small_pools(self) -> None:
+        for row in self.catalog["species"]:
+            row["native_skill_id"] = 3
+        for row in self.catalog["monp_instances"].values():
+            row["skill_ids"] = (3, 0, 0)
+        plan = plan_encounter_randomization(
+            self.catalog, self.inventory, GlobalOptions(seed=73, randomize_skills=True),
+        )
+        self.assertTrue(all(skills == (3, 0, 0) for skills in plan["skill_mapping"].values()))
+        self.catalog["monp_instances"][100]["skill_ids"] = (3, 3, 3)
+        plan = plan_encounter_randomization(
+            self.catalog, self.inventory, GlobalOptions(seed=73, randomize_skills=True),
+        )
+        self.assertEqual(plan["skill_mapping"][100], (3, 0, 0))
+
+    def test_skill_patch_rejects_invalid_ids_or_unselected_instances(self) -> None:
+        for skills in ((1, 2), (1, 2, 65536), (1, 2, -1), (1, 2, True)):
+            with self.subTest(skills=skills), self.assertRaisesRegex(ValueError, "abilità non validi"):
+                patch_monsterparam(
+                    self.monsterparam, {100}, instance_mapping={100: 400}, skill_mapping={100: skills},
+                )
+        with self.assertRaisesRegex(ValueError, "non selezionati"):
+            patch_monsterparam(
+                self.monsterparam, {100}, instance_mapping={100: 400}, skill_mapping={200: (1, 2, 3)},
+            )
+        with self.assertRaisesRegex(ValueError, "booleano"):
+            GlobalOptions(seed=73, randomize_skills="yes")
 
     def test_family_filter_limits_replacements_but_keeps_all_targets(self) -> None:
         plan = plan_encounter_randomization(

@@ -23,6 +23,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--include-special-donors", action="store_true", help="Aggiunge ai possibili sostituti i mostri compatibili degli eventi e dei boss")
     parser.add_argument("--include-nonwild-instances", action="store_true", help="Estende le modifiche ai record MONP fuori dagli incontri selvatici")
     parser.add_argument("--randomize-levels", action="store_true", help="Assegna ai record MONP selezionati un livello deterministico da 1 a 99")
+    parser.add_argument("--randomize-skills", action="store_true", help="Assegna set di abilità casuali; normalmente usa il set nativo della nuova specie e conserva quelli aggiuntivi")
     parser.add_argument(
         "--family", action="append", choices=sorted(FAMILY_NAME_TO_CODE), metavar="FAMILY",
         help="Limita i possibili sostituti a questa famiglia; ripeti l'opzione per aggiungerne altre.",
@@ -48,6 +49,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             include_special_donors=args.include_special_donors,
             include_nonwild_instances=args.include_nonwild_instances,
             randomize_levels=args.randomize_levels,
+            randomize_skills=args.randomize_skills,
             donor_family_codes=(
                 frozenset(FAMILY_NAME_TO_CODE[name] for name in args.family)
                 if args.family else None

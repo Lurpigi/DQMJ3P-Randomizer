@@ -83,13 +83,16 @@ The app does not include game files and does not open CIA or 3DS files. It needs
 4. Enter a seed. Use `0` to get a random one.
 5. Open **Advanced options** if needed. Hover over **ⓘ** for details.
 6. Optional: select **Randomize levels too (1–99)**.
-7. Optional: select **Use event and boss species as replacements**.
-8. Optional: select **Also change records outside wild encounters (experimental)**.
-9. Click **Create package**. Find the folder and ZIP in `output/`.
+7. Optional: select **Use random skill sets**.
+8. Optional: select **Use event and boss species as replacements**.
+9. Optional: select **Also change records outside wild encounters (experimental)**.
+10. Click **Create package**. Find the folder and ZIP in `output/`.
 
 The same seed and options always assign the same replacement to each battle record. Encounters of the same species can differ if they use different records. Encounters that share a record keep the same replacement.
 
 When level randomization is enabled, the seed also assigns each selected monster record a level from 1 to 99. Records shared by multiple encounters get the same level.
+
+By default, each replacement receives its new species' native skill set. Supplemental sets are kept, with duplicates removed. **Use random skill sets** assigns random sets to occupied slots instead, using sets already present in the game data. The same seed gives the same result, and a monster cannot receive duplicate sets.
 
 The package contains the modified files, a manifest, a spoiler file, a configuration file, and this README with installation steps. The app checks both selected folders before creating it. Source game files are not included in the app download.
 
@@ -127,6 +130,7 @@ Start the game and revisit an area to refresh its encounters. To remove the rand
 
 ```powershell
 python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42
+python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42 --randomize-skills
 python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42 --include-special-donors --include-nonwild-instances --randomize-levels
 python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42 --family slime --family material
 python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42 --family slime --rank f --rank ss
@@ -215,13 +219,16 @@ Il programma non include file di gioco né apre file CIA o 3DS. Per funzionare, 
 4. Inserisci un seed. Usa `0` per generarne uno casuale.
 5. Apri **Opzioni avanzate** se ti servono. Per i dettagli, passa il puntatore su **ⓘ**.
 6. Facoltativo: seleziona **Randomizza anche il livello (1–99)**.
-7. Facoltativo: seleziona **Usa anche mostri degli eventi e dei boss come sostituti**.
-8. Facoltativo: seleziona **Modifica anche i record fuori dagli incontri selvatici (sperimentale)**.
-9. Premi **Crea pacchetto**. Trovi i file in `output/`.
+7. Facoltativo: seleziona **Usa set di abilità casuali**.
+8. Facoltativo: seleziona **Usa anche mostri degli eventi e dei boss come sostituti**.
+9. Facoltativo: seleziona **Modifica anche i record fuori dagli incontri selvatici (sperimentale)**.
+10. Premi **Crea pacchetto**. Trovi i file in `output/`.
 
 Con lo stesso seed e le stesse opzioni, ogni record di battaglia riceve sempre lo stesso sostituto. Incontri della stessa specie possono ricevere sostituti diversi se usano record diversi. Se più incontri condividono un record, ricevono lo stesso sostituto.
 
 Se attivi la randomizzazione dei livelli, il seed assegna a ogni record MONP selezionato un livello da 1 a 99. I record condivisi da più incontri ricevono lo stesso livello.
+
+Di norma, ogni sostituto riceve il set di abilità nativo della nuova specie. I set aggiuntivi vengono conservati, eliminando eventuali duplicati. **Usa set di abilità casuali** assegna invece set casuali agli slot occupati, scegliendoli tra quelli già presenti nei dati di gioco. Lo stesso seed dà lo stesso risultato e un mostro non può ricevere set duplicati.
 
 Il pacchetto include i file modificati, un manifest, il riepilogo delle sostituzioni, un file di configurazione e questo README con le istruzioni per l'installazione. Prima di crearlo, l'app controlla entrambe le cartelle selezionate. Il download del programma non include file di gioco.
 
@@ -259,6 +266,7 @@ Avvia il gioco ed entra in una nuova area per caricare gli incontri modificati. 
 
 ```powershell
 python randomize.py --base-romfs "C:\percorso\romfs-base" --update-romfs "C:\percorso\romfs-update" --seed 42
+python randomize.py --base-romfs "C:\percorso\romfs-base" --update-romfs "C:\percorso\romfs-update" --seed 42 --randomize-skills
 python randomize.py --base-romfs "C:\percorso\romfs-base" --update-romfs "C:\percorso\romfs-update" --seed 42 --include-special-donors --include-nonwild-instances --randomize-levels
 python randomize.py --base-romfs "C:\percorso\romfs-base" --update-romfs "C:\percorso\romfs-update" --seed 42 --family slime --family material
 python randomize.py --base-romfs "C:\percorso\romfs-base" --update-romfs "C:\percorso\romfs-update" --seed 42 --family slime --rank f --rank ss
@@ -345,15 +353,18 @@ Choisissez **EN**, **IT** ou **FR** dans le coin en haut à droite pour changer 
 
 1. Sélectionnez les dossiers RomFS des jeu de base et mise à jour 1.3. (Faites attention à ne pas sélectionner leur sous-dossiers `data/`) Si vous ne les avez pas encore extraits, allez voir [Récupérer le dossier RomFS](#récupérer-le-dossier-romfs).
 2. Vous pouvez changer les familles autorisées pour les remplacements. 
-3. Vous pouvez changer les rangs autorisés pour les remplacements.
-    - Ces filtres 
-    - Si les deux filtres sont actifs, les monstres remplécés devront correspondre aux deux filtres.
-4. Vous pouvez changer la graine une graine. Use `0` to get a random one.
+3. Choisissez les rangs autorisés. Si les deux filtres sont actifs, chaque remplacement doit respecter les deux.
+4. Entrez une graine. Utilisez `0` pour en générer une aléatoire.
 5. Si vous le souhaitez, **Affichez les paramètres avancés**. Survolez **ⓘ** pour plus d'informations.
 6. En option, sélectionnez **Randomiser aussi le niveau (1–99)**.
-7. Cliquez sur **Créer le paquet**. Les dossier et fichier ZIP seront dans le dossier `output/`.
+7. En option, sélectionnez **Utiliser des sets de compétences aléatoires**.
+8. En option, sélectionnez **Utiliser les espèces de monstres d'évènement et de boss comme remplacements**.
+9. En option, sélectionnez **Aussi changer les entrées en dehors des rencontres en combat (expérimental)**.
+10. Cliquez sur **Créer le paquet**. Le dossier et le fichier ZIP seront dans `output/`.
 
 Les mêmes paramètres et la même graine appliquent toujours les mêmes changements aux entrées de combat. Les rencontres de la même espèce peuvent changer si elles utilisent des entrées différentes. Les rencontres qui partagent une entrée ont les mêmes remplacements. Si la randomisation des niveaux est activée, chaque entrée MONP sélectionnée reçoit aussi un niveau de 1 à 99 déterminé par la graine. Les entrées partagées gardent le même niveau.
+
+Par défaut, chaque remplacement reçoit le set de compétences natif de sa nouvelle espèce. Les sets supplémentaires sont conservés, sans doublons. **Utiliser des sets de compétences aléatoires** attribue plutôt des sets aléatoires aux emplacements occupés, parmi ceux déjà présents dans les données du jeu. La même graine donne le même résultat, sans sets en double pour un monstre.
 
 Les paquets contiennent les fichiers modifiés, un manifeste, un fichier de spoilers, un fichier de configuration, et ce README avec les étapes d'installation. L'application vérifie les deux dossiers RomFS avant de créer ce paquet. Aucun fichier venant du jeu n'est inclus dans les paquets créés.
 
@@ -404,6 +415,7 @@ Les paquets contiennent les fichiers modifiés, un manifeste, un fichier de spoi
 
 ```powershell
 python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42
+python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42 --randomize-skills
 python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42 --include-special-donors --include-nonwild-instances --randomize-levels
 python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42 --family slime --family material
 python randomize.py --base-romfs "C:\path\to\base-romfs" --update-romfs "C:\path\to\update-romfs" --seed 42 --family slime --rank f --rank ss

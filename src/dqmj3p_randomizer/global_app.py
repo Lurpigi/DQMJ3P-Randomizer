@@ -14,6 +14,9 @@ from .global_service import GlobalBuildError, build_global_overlay
 from .romfs_source import RomFsSource, RomFsSourceError
 
 
+EXPECTED_ENCOUNTER_ARCHIVE_COUNT = 117
+
+
 FAMILY_ICONS = {
     1: "slime", 2: "dragon", 3: "beast", 4: "nature", 5: "demon",
     6: "undead", 7: "material", 8: "break", 9: "special",
@@ -134,12 +137,17 @@ _TEXT = {
         "advanced": "Opzioni avanzate",
         "randomize_levels": "Randomizza anche il livello (1–99)",
         "levels_help": "Assegna a ogni record MONP selezionato un livello da 1 a 99 determinato dal seed. I record condivisi ricevono lo stesso livello.",
+        "randomize_skills": "Usa set di abilità casuali",
+        "skills_help": "Di norma usa il set nativo della nuova specie e conserva i set aggiuntivi, evitando duplicati. Questa opzione assegna invece set casuali agli slot occupati, senza duplicati. Il seed determina il risultato; i filtri di famiglia e grado non limitano i set di abilità.",
         "special_option": "Usa anche mostri degli eventi e dei boss come sostituti",
         "special_help": "Aggiunge ai possibili sostituti i mostri degli eventi e dei boss con taglia e modello compatibili. L'opzione successiva estende le modifiche ai record fuori dagli incontri selvatici. Alcuni record sono condivisi con gli incontri selvatici.",
         "nonwild_option": "Modifica anche i record fuori dagli incontri selvatici (sperimentale)",
         "nonwild_help": "Modifica anche i record MONP usati fuori dagli incontri selvatici. Può coinvolgere eventi, boss, personaggi e tornei. In alcune scene può restare visibile il mostro originale.",
         "create": "Crea pacchetto",
         "ready": "Cartelle pronte. Archivi degli incontri rilevati: {count}.",
+        "encounter_count_warning_title": "Numero di archivi degli incontri inatteso",
+        "encounter_count_warning": "Attenzione: trovati {count} archivi degli incontri; attesi {expected}.",
+        "encounter_count_warning_message": "Trovati {count} archivi degli incontri; attesi {expected}.\n\nControlla di aver selezionato il RomFS del gioco base e quello dell'aggiornamento 1.3. Puoi comunque creare il pacchetto.",
         "data_error": "Le cartelle RomFS non sono valide o sono incomplete.",
         "building": "Analisi delle tabelle e creazione del pacchetto…",
         "build_error": "Il pacchetto non è stato creato.",
@@ -183,12 +191,17 @@ _TEXT = {
         "advanced": "Advanced options",
         "randomize_levels": "Randomize levels too (1–99)",
         "levels_help": "Assigns each selected MONP record a level from 1 to 99 based on the seed. Shared records get the same level.",
+        "randomize_skills": "Use random skill sets",
+        "skills_help": "Normally uses the new species' native skill set and keeps supplemental sets, removing duplicates. This option assigns random sets to occupied slots without duplicates. The seed determines the result; family and rank filters do not limit skill sets.",
         "special_option": "Use event and boss species as replacements",
         "special_help": "Adds event and boss species with a compatible size and model. The next option also changes records outside wild encounters. Some records are shared with wild encounters.",
         "nonwild_option": "Also change records outside wild encounters (experimental)",
         "nonwild_help": "Extends changes to MONP records outside wild encounters. This may affect events, bosses, characters, and tournaments. Some scenes may still show the original monster.",
         "create": "Create package",
         "ready": "Folders ready: found {count} encounter archives.",
+        "encounter_count_warning_title": "Unexpected encounter archive count",
+        "encounter_count_warning": "Warning: found {count} encounter archives; expected {expected}.",
+        "encounter_count_warning_message": "Found {count} encounter archives; expected {expected}.\n\nCheck that you selected the base game RomFS and update 1.3 RomFS. You can still create the package.",
         "data_error": "The RomFS folders are invalid or incomplete.",
         "building": "Reading tables and creating package…",
         "build_error": "Could not create the package.",
@@ -232,12 +245,17 @@ _TEXT = {
         "advanced": "Paramètres avancés",
         "randomize_levels": "Randomiser aussi le niveau (1–99)",
         "levels_help": "Attribue à chaque entrée MONP sélectionnée un niveau de 1 à 99 déterminé par la graine. Les entrées partagées gardent le même niveau.",
+        "randomize_skills": "Utiliser des sets de compétences aléatoires",
+        "skills_help": "Par défaut, utilise le set natif de la nouvelle espèce et conserve les sets supplémentaires, sans doublons. Cette option attribue des sets aléatoires aux emplacements occupés, sans doublons. La graine détermine le résultat ; les filtres de famille et de rang ne limitent pas les compétences.",
         "special_option": "Utiliser les espèces de monstres d'évènement et de boss comme remplacements",
         "special_help": "Ajoute les espèces des monstes évènementiels et des boss, en leur donnant une taille et un modèle compatible.",
         "nonwild_option": "Aussi changer les entrées en dehors des rencontres en combat (expérimental)",
         "nonwild_help": "Étend les changements aux entrées MONP en dehors des monstres sauvages. Cela pourrait affecter les évènements, les boss, les personnages et les tournois. Certaines scènes pourraient afficher des monstres originaux.",
         "create": "Créer le paquet",
         "ready": "Dossiers prêts: {count} archives de rencontres trouvées.",
+        "encounter_count_warning_title": "Nombre d'archives de rencontres inattendu",
+        "encounter_count_warning": "Attention : {count} archives de rencontres trouvées ; {expected} attendues.",
+        "encounter_count_warning_message": "{count} archives de rencontres trouvées ; {expected} attendues.\n\nVérifiez que vous avez sélectionné le RomFS du jeu de base et celui de la mise à jour 1.3. Vous pouvez quand même créer le paquet.",
         "data_error": "Les dossiers RomFS sont invalides ou incomplets.",
         "building": "Lecture des tables et céation du paquet…",
         "build_error": "Impossible de créer le paquet.",
@@ -268,6 +286,7 @@ class GlobalRandomizerApp:
         self.special_var = tk.BooleanVar(value=False)
         self.nonwild_var = tk.BooleanVar(value=False)
         self.levels_var = tk.BooleanVar(value=False)
+        self.skills_var = tk.BooleanVar(value=False)
         self.status_var = tk.StringVar(value="")
         self.advanced_open = False
         self.dataset_available = False
@@ -547,6 +566,8 @@ class GlobalRandomizerApp:
         self._advanced_option(
             "randomize_levels", self.levels_var, "levels_help")
         self._advanced_option(
+            "randomize_skills", self.skills_var, "skills_help")
+        self._advanced_option(
             "special_option", self.special_var, "special_help")
         self._advanced_option(
             "nonwild_option", self.nonwild_var, "nonwild_help")
@@ -672,6 +693,14 @@ class GlobalRandomizerApp:
         self.dataset_archive_count = source.describe()["et_archive_count"]
         self.dataset_available = True
         self._set_status("ready", count=self.dataset_archive_count)
+        if self.dataset_archive_count != EXPECTED_ENCOUNTER_ARCHIVE_COUNT:
+            values = {"count": self.dataset_archive_count, "expected": EXPECTED_ENCOUNTER_ARCHIVE_COUNT}
+            self._set_status("encounter_count_warning", **values)
+            messagebox.showwarning(
+                self._text("encounter_count_warning_title"),
+                self._text("encounter_count_warning_message").format(**values),
+                parent=self.root,
+            )
 
     def _start_build(self) -> None:
         if not self.dataset_available:
@@ -702,7 +731,7 @@ class GlobalRandomizerApp:
             target=self._build_worker,
             args=(
                 seed, self.special_var.get(), self.nonwild_var.get(),
-                self.levels_var.get(),
+                self.levels_var.get(), self.skills_var.get(),
                 self.base_romfs_root, self.update_romfs_root,
                 self._donor_family_codes(), self._donor_rank_codes(),
             ),
@@ -712,6 +741,7 @@ class GlobalRandomizerApp:
 
     def _build_worker(
         self, seed: int, special: bool, nonwild: bool, randomize_levels: bool,
+        randomize_skills: bool,
         base_romfs_root: Path | None, update_romfs_root: Path | None,
         donor_family_codes: frozenset[int] | None,
         donor_rank_codes: frozenset[int] | None,
@@ -728,6 +758,7 @@ class GlobalRandomizerApp:
                 include_special_donors=special,
                 include_nonwild_instances=nonwild,
                 randomize_levels=randomize_levels,
+                randomize_skills=randomize_skills,
                 donor_family_codes=donor_family_codes,
                 donor_rank_codes=donor_rank_codes,
             )
